@@ -2,20 +2,13 @@
 
 import React, { useState } from "react";
 import {
-  Clock,
-  Radio,
-  Binary,
-  Layers,
-  Award,
-  CheckCircle2,
   FileSearch,
   Globe,
-  Search,
-  ShieldCheck,
+  Radio,
+  CheckCircle2,
   Terminal,
-  Activity,
   X,
-  Info,
+  ShieldCheck,
 } from "lucide-react";
 
 interface ScanPipelineTrackerProps {
@@ -54,22 +47,20 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
   const activeStageObj = STAGES[activeIndex] || STAGES[0];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6 font-sans text-zinc-300">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6 font-sans text-slate-300">
       
-      {/* ========================================================================= */}
-      {/* 1. HEADER CARD WITH TARGET & '!' INFO BUTTON                              */}
-      {/* ========================================================================= */}
-      <div className="rounded-xl border border-zinc-800 bg-[#0e1117] p-6 space-y-4 shadow-sm">
+      {/* 1. HEADER CARD WITH TARGET & '!' INFO BUTTON */}
+      <div className="rounded-2xl border border-[#1a293e] bg-[#0d1522] p-6 space-y-4 shadow-xl">
         
         {/* Top Tag & Action Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-zinc-850 text-zinc-300 border border-zinc-750 text-xs font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-3 font-mono">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#070b12] text-[#CBF1F5] border border-[#1a293e] text-xs">
             {scanType === "file" ? (
-              <FileSearch className="w-3.5 h-3.5 text-zinc-400" />
+              <FileSearch className="w-3.5 h-3.5 text-[#71C9CE]" />
             ) : scanType === "url_check" || scanType === "url" ? (
-              <Radio className="w-3.5 h-3.5 text-zinc-400" />
+              <Radio className="w-3.5 h-3.5 text-[#71C9CE]" />
             ) : (
-              <Globe className="w-3.5 h-3.5 text-zinc-400" />
+              <Globe className="w-3.5 h-3.5 text-[#71C9CE]" />
             )}
             <span className="font-semibold uppercase tracking-wider text-[11px]">
               {scanType === "file"
@@ -84,34 +75,32 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
           <button
             type="button"
             onClick={() => setShowInfo(!showInfo)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-750 text-xs font-mono transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#070b12] hover:bg-[#131e2e] text-[#CBF1F5] hover:text-[#E3FDFD] border border-[#1a293e] hover:border-[#71C9CE] text-xs transition"
             title="Click to view scan capabilities & scope"
           >
-            <span className="w-4 h-4 rounded-full bg-zinc-700 text-zinc-100 flex items-center justify-center font-bold text-[10px]">
+            <span className="w-4 h-4 rounded-full bg-[#71C9CE]/20 text-[#71C9CE] flex items-center justify-center font-bold text-[10px]">
               !
             </span>
-            <span>What we do in this scan</span>
+            <span>Inspection Scope</span>
           </button>
         </div>
 
         {/* Target Title & Evidence Baseline Subtitle */}
         <div className="space-y-1">
-          <h1 className="text-lg sm:text-xl font-bold text-white font-mono break-all tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-white font-mono break-all tracking-tight">
             {target}
           </h1>
-          <p className="text-xs text-zinc-400 font-mono">
+          <p className="text-xs text-slate-400 font-mono">
             Non-destructive passive telemetry • Evidence-first verification • Zero synthetic data
           </p>
         </div>
 
-        {/* ========================================================================= */}
-        {/* EXPANDABLE '!' INFORMATION NOTE                                           */}
-        {/* ========================================================================= */}
+        {/* EXPANDABLE '!' INFORMATION NOTE */}
         {showInfo && (
-          <div className="p-4 rounded-lg bg-zinc-900 border border-zinc-750 text-xs font-sans text-zinc-300 space-y-3 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <div className="flex items-center gap-2 font-mono font-bold text-zinc-200">
-                <span className="w-4 h-4 rounded-full bg-zinc-700 text-zinc-100 flex items-center justify-center font-bold text-[10px]">
+          <div className="p-4 rounded-xl bg-[#070b12] border border-[#1a293e] text-xs font-sans text-slate-300 space-y-3 transition-all">
+            <div className="flex items-center justify-between border-b border-[#1a293e] pb-2 font-mono">
+              <div className="flex items-center gap-2 font-bold text-[#E3FDFD]">
+                <span className="w-4 h-4 rounded-full bg-[#71C9CE]/20 text-[#71C9CE] flex items-center justify-center font-bold text-[10px]">
                   !
                 </span>
                 <span>Inspection Scope &amp; Safety Standard</span>
@@ -119,7 +108,7 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
               <button
                 type="button"
                 onClick={() => setShowInfo(false)}
-                className="text-zinc-400 hover:text-white font-mono text-xs flex items-center gap-1"
+                className="text-slate-400 hover:text-white text-xs flex items-center gap-1"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Close</span>
@@ -128,36 +117,36 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] leading-relaxed">
               <div className="space-y-0.5">
-                <strong className="text-zinc-200 block font-mono">1. Passive DNS &amp; Routing</strong>
-                <p className="text-zinc-400">
+                <strong className="text-[#CBF1F5] block font-mono">1. Passive DNS &amp; Routing</strong>
+                <p className="text-slate-400">
                   Inspects A/AAAA records, DMARC policy, SPF declarations, and CAA authorized issuers.
                 </p>
               </div>
 
               <div className="space-y-0.5">
-                <strong className="text-zinc-200 block font-mono">2. TLS &amp; Transport Encryption</strong>
-                <p className="text-zinc-400">
+                <strong className="text-[#CBF1F5] block font-mono">2. TLS &amp; Transport Encryption</strong>
+                <p className="text-slate-400">
                   Validates TLS protocol handshakes, cipher suite configuration, and certificate expiration.
                 </p>
               </div>
 
               <div className="space-y-0.5">
-                <strong className="text-zinc-200 block font-mono">3. HTTP Defensive Directives</strong>
-                <p className="text-zinc-400">
+                <strong className="text-[#CBF1F5] block font-mono">3. HTTP Defensive Directives</strong>
+                <p className="text-slate-400">
                   Audits HSTS, Content-Security-Policy (CSP), X-Frame-Options, and Permissions-Policy.
                 </p>
               </div>
 
               <div className="space-y-0.5">
-                <strong className="text-zinc-200 block font-mono">4. Technology &amp; CMS Profiling</strong>
-                <p className="text-zinc-400">
+                <strong className="text-[#CBF1F5] block font-mono">4. Technology &amp; CMS Profiling</strong>
+                <p className="text-slate-400">
                   Passively fingerprints web servers, reverse proxies (Cloudflare, Nginx), CMS, and frameworks.
                 </p>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-zinc-800 text-[11px] text-zinc-400 font-mono flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-zinc-300 shrink-0" />
+            <div className="pt-2 border-t border-[#1a293e] text-[11px] text-slate-400 font-mono flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#71C9CE] shrink-0" />
               <span>
                 100% Non-destructive passive analysis. No malicious exploit payloads or code execution.
               </span>
@@ -165,10 +154,8 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* 2. SLEEK MODERN PROGRESS ANIMATION                                        */}
-        {/* ========================================================================= */}
-        <div className="pt-4 border-t border-zinc-800 space-y-3 font-mono">
+        {/* 2. PROGRESS ANIMATION */}
+        <div className="pt-4 border-t border-[#1a293e] space-y-3 font-mono">
           
           {/* Progress Header: Stage Status + Percentage */}
           <div className="flex items-center justify-between text-xs">
@@ -206,9 +193,7 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
           </p>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 3. CONNECTED TIMELINE PIPELINE STEPPER                                     */}
-        {/* ========================================================================= */}
+        {/* 3. TIMELINE PIPELINE STEPPER */}
         <div className="pt-4 border-t border-[#1a293e]">
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
             {STAGES.map((s, index) => {
@@ -263,54 +248,52 @@ export const ScanPipelineTracker: React.FC<ScanPipelineTrackerProps> = ({
 
       </div>
 
-      {/* ========================================================================= */}
-      {/* 4. REAL-TIME AUDIT LOG ACTIVITY CONSOLE                                   */}
-      {/* ========================================================================= */}
-      <div className="border border-zinc-800 rounded-xl bg-[#0e1117] p-4 space-y-2.5 font-mono text-xs">
-        <div className="flex items-center justify-between text-zinc-400 border-b border-zinc-800 pb-2">
+      {/* 4. REAL-TIME AUDIT LOG ACTIVITY CONSOLE */}
+      <div className="border border-[#1a293e] rounded-2xl bg-[#0d1522] p-4 space-y-2.5 font-mono text-xs shadow-xl">
+        <div className="flex items-center justify-between text-slate-400 border-b border-[#1a293e] pb-2">
           <div className="flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-zinc-300">
+            <Terminal className="w-3.5 h-3.5 text-[#71C9CE]" />
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#CBF1F5]">
               Live Telemetry Stream
             </span>
           </div>
-          <span className="text-[10px] text-zinc-500">Evidence Protocol v2.4</span>
+          <span className="text-[10px] text-slate-500">RootLayer ASVS Protocol</span>
         </div>
 
-        <div className="space-y-1 text-[11px] text-zinc-400">
+        <div className="space-y-1.5 text-[11px] text-slate-400">
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[01]</span>
-            <span className={activeIndex >= 0 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[01]</span>
+            <span className={activeIndex >= 0 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Allocated isolated worker sandbox for target reconnaissance
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[02]</span>
-            <span className={activeIndex >= 1 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[02]</span>
+            <span className={activeIndex >= 1 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Initiated TCP &amp; TLS 1.3 handshake negotiation
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[03]</span>
-            <span className={activeIndex >= 2 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[03]</span>
+            <span className={activeIndex >= 2 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Harvesting passive DNS records (SPF, DMARC, CAA) and certificate chain
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[04]</span>
-            <span className={activeIndex >= 3 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[04]</span>
+            <span className={activeIndex >= 3 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Inspecting HTTP headers, security cookies &amp; route surface policies
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[05]</span>
-            <span className={activeIndex >= 4 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[05]</span>
+            <span className={activeIndex >= 4 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Fingerprinting web servers, CMS signatures, and technology stack
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-zinc-600 select-none">[06]</span>
-            <span className={activeIndex >= 5 ? "text-zinc-300" : "text-zinc-600"}>
+            <span className="text-[#71C9CE] select-none">[06]</span>
+            <span className={activeIndex >= 5 ? "text-[#E3FDFD]" : "text-slate-600"}>
               Finalizing evidence validation without synthetic or placeholder values
             </span>
           </div>
