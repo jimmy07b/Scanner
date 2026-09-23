@@ -1,0 +1,31 @@
+services:
+  # Backend API Service (FastAPI)
+  - type: web
+    name: rootlayer-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "https://rootlayer.vercel.app,http://localhost:3000"
+
+  # Frontend Web App (Next.js)
+  - type: web
+    name: rootlayer-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: rootlayer-api
+          property: host
