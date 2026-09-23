@@ -36,6 +36,18 @@ export default function HomePage() {
   const [fileLoading, setFileLoading] = useState(false);
   const [fileError, setFileError] = useState("");
 
+  const parseError = (err: any, fallback: string): string => {
+    const detail = err.response?.data?.detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail.map((d: any) => d.msg || JSON.stringify(d)).join(", ");
+    }
+    if (err.message && (err.message.includes("Network Error") || err.code === "ERR_NETWORK")) {
+      return "Backend service is establishing connection / waking up. Please retry in 10-15 seconds.";
+    }
+    return err.message || fallback;
+  };
+
   // Handle Website Audit
   const handleWebsiteAudit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +61,7 @@ export default function HomePage() {
       const res = await api.startWebsiteAudit(siteInput.trim(), true);
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
-      setSiteError(
-        err.response?.data?.detail || "Website audit failed. Please check the URL and try again."
-      );
+      setSiteError(parseError(err, "Website audit failed. Please retry in a few moments."));
       setSiteLoading(false);
     }
   };
@@ -69,9 +79,7 @@ export default function HomePage() {
       const res = await api.startUrlCheck(urlInput.trim(), true);
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
-      setUrlError(
-        err.response?.data?.detail || "URL check failed. Please check the input and try again."
-      );
+      setUrlError(parseError(err, "URL check failed. Please check the input and retry."));
       setUrlLoading(false);
     }
   };
@@ -103,9 +111,7 @@ export default function HomePage() {
       const res = await api.startFileScan(file, true);
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
-      setFileError(
-        err.response?.data?.detail || "File scan failed. Ensure file is within size limits."
-      );
+      setFileError(parseError(err, "File scan failed. Ensure file is within size limits."));
       setFileLoading(false);
     }
   };

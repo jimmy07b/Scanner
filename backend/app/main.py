@@ -1,3 +1,4 @@
+import os
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -42,6 +43,9 @@ async def lifespan(app: FastAPI):
             db.add(admin_user)
             await db.commit()
             print(f"[AegisScan] Initialized default admin user: {settings.ADMIN_DEFAULT_EMAIL}")
+        elif os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_DEFAULT_PASSWORD"):
+            admin_user.hashed_password = hash_password(settings.ADMIN_DEFAULT_PASSWORD)
+            await db.commit()
 
     yield
     # Shutdown

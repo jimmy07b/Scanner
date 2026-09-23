@@ -19,12 +19,12 @@ class Settings(BaseSettings):
         f"sqlite+aiosqlite:///{BASE_DIR / 'aegis_scan.db'}"
     )
     
-    # Security & Auth
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "aegis_super_secret_jwt_key_startup_mvp_2026_change_in_prod")
+    # Security & Auth (Zero hardcoded secrets: dynamically generated if not specified in environment)
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or os.urandom(32).hex()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     ADMIN_DEFAULT_EMAIL: str = os.getenv("ADMIN_EMAIL", os.getenv("ADMIN_DEFAULT_EMAIL", "admin@rootlayer.io"))
-    ADMIN_DEFAULT_PASSWORD: str = os.getenv("ADMIN_PASSWORD", os.getenv("ADMIN_DEFAULT_PASSWORD", "AegisScan2026!Secure"))
+    ADMIN_DEFAULT_PASSWORD: str = os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_DEFAULT_PASSWORD") or os.urandom(16).hex()
     
     # File Storage & Limits
     MAX_FILE_SIZE_BYTES: int = 50 * 1024 * 1024  # 50 MB

@@ -1,7 +1,24 @@
 import axios from "axios";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
-const API_ROOT = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1").replace(/\/api\/v1\/?$/, "");
+// Helper to resolve active API root and base:
+// In the browser, use relative paths so requests are reverse-proxied transparently
+// through Next.js rewrites to the backend on the same origin (no CORS issues, no adblock blocks).
+// On the server, fallback to BACKEND_URL or NEXT_PUBLIC_API_URL or local backend.
+export const getApiRoot = (): string => {
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  const raw = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  return raw.replace(/\/api\/v1\/?$/, "").replace(/\/api\/?$/, "");
+};
+
+export const getApiBase = (): string => {
+  if (typeof window !== "undefined") {
+    return "/api/v1";
+  }
+  const raw = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+  return raw.endsWith("/api/v1") ? raw : `${raw.replace(/\/+$/, "")}/api/v1`;
+};
 
 export interface Finding {
   id?: string;
@@ -69,73 +86,85 @@ export interface AuditRequest {
 export interface AdminMetrics {
   total_scans: number;
   total_website_scans?: number;
-  total_file_scans: number;
-  total_url_scans: number;
-  threats_flagged: number;
-  audit_requests_count: number;
-  pending_audits: number;
-  total_revenue_inr: number;
-  active_files_stored: number;
+  total_file_scans?: number;
+  total_url_scans?: number;
+  threats_flagged?: number;
+  audit_requests_count?: number;
+  pending_audits?: number;
+  total_revenue_inr?: number;
+  active_files_stored?: number;
+  total_findings?: number;
+  total_audits?: number;
+  recent_scans?: ScanResult[];
+  recent_audits?: AuditRequest[];
 }
 
 export const api = {
   // 3-Engine Asynchronous Job Pipeline
   async startUrlCheck(url: string, authorized: boolean): Promise<ScanJobResponse> {
-    const res = await axios.post(`${API_ROOT}/api/scans/url`, { url, authorized });
+    const root = getApiRoot();
+    const res = await axios.post(`${root}/api/scans/url`, { url, authorized });
     return res.data;
   },
 
   async startWebsiteAudit(url: string, authorized: boolean): Promise<ScanJobResponse> {
-    const res = await axios.post(`${API_ROOT}/api/scans/website`, { url, authorized });
+    const root = getApiRoot();
+    const res = await axios.post(`${root}/api/scans/website`, { url, authorized });
     return res.data;
   },
 
   async startFileScan(file: File, authorized: boolean): Promise<ScanJobResponse> {
+    const root = getApiRoot();
     const formData = new FormData();
     formData.append("file", file);
     formData.append("authorized", String(authorized));
 
-    const res = await axios.post(`${API_ROOT}/api/scans/file`, formData, {
+    const res = await axios.post(`${root}/api/scans/file`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
   },
 
   async getScanJob(scanId: string): Promise<ScanResult> {
-    const res = await axios.get(`${API_ROOT}/api/scans/${scanId}`);
+    const root = getApiRoot();
+    const res = await axios.get(`${root}/api/scans/${scanId}`);
     return res.data;
   },
 
   // Legacy compatibility scans
   async scanFile(file: File, authorized: boolean): Promise<ScanResult> {
+    const base = getApiBase();
     const formData = new FormData();
     formData.append("file", file);
     formData.append("authorized", String(authorized));
 
-    const res = await axios.post(`${API_BASE}/scan/file`, formData, {
+    const res = await axios.post(`${base}/scan/file`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
   },
 
   async scanUrl(url: string, authorized: boolean): Promise<ScanResult> {
-    const res = await axios.post(`${API_BASE}/scan/url`, { url, authorized });
+    const base = getApiBase();
+    const res = await axios.post(`${base}/scan/url`, { url, authorized });
     return res.data;
   },
 
   async getScanResult(id: string): Promise<ScanResult> {
-    // Try the scan job endpoint first, fallback to scan result
+    const root = getApiRoot();
+    const base = getApiBase();
     try {
-      const res = await axios.get(`${API_ROOT}/api/scans/${id}`);
+      const res = await axios.get(`${root}/api/scans/${id}`);
       return res.data;
     } catch {
-      const res = await axios.get(`${API_BASE}/scan/${id}`);
+      const res = await axios.get(`${base}/scan/${id}`);
       return res.data;
     }
   },
 
   async shredFile(scanId: string): Promise<{ message: string; shredded: boolean }> {
-    const res = await axios.post(`${API_BASE}/scan/${scanId}/shred`);
+    const base = getApiBase();
+    const res = await axios.post(`${base}/scan/${scanId}/shred`);
     return res.data;
   },
 
@@ -148,17 +177,20 @@ export const api = {
     scope_notes?: string;
     authorized: boolean;
   }): Promise<AuditRequest> {
-    const res = await axios.post(`${API_BASE}/audits/request`, data);
+    const base = getApiBase();
+    const res = await axios.post(`${base}/audits/request`, data);
     return res.data;
   },
 
   async getAuditRequest(id: string): Promise<AuditRequest> {
-    const res = await axios.get(`${API_BASE}/audits/${id}`);
+    const base = getApiBase();
+    const res = await axios.get(`${base}/audits/${id}`);
     return res.data;
   },
 
   async payAuditRequest(id: string, payment_method = "card"): Promise<any> {
-    const res = await axios.post(`${API_BASE}/audits/${id}/payment`, {
+    const base = getApiBase();
+    const res = await axios.post(`${base}/audits/${id}/payment`, {
       audit_request_id: id,
       payment_method,
     });
@@ -167,64 +199,74 @@ export const api = {
 
   // Reports
   async getReport(id: string): Promise<any> {
-    const res = await axios.get(`${API_BASE}/reports/${id}`);
+    const base = getApiBase();
+    const res = await axios.get(`${base}/reports/${id}`);
     return res.data;
   },
 
   getPrintableExportUrl(id: string): string {
-    return `${API_BASE}/reports/${id}/export`;
+    const base = getApiBase();
+    return `${base}/reports/${id}/export`;
   },
 
   // Admin
   async adminLogin(email: string, password: string): Promise<{ access_token: string; token_type: string; user_email: string }> {
-    const res = await axios.post(`${API_BASE}/admin/login`, { email, password });
+    const base = getApiBase();
+    const res = await axios.post(`${base}/admin/login`, { email, password });
     return res.data;
   },
 
   async getAdminMetrics(token: string): Promise<AdminMetrics> {
-    const res = await axios.get(`${API_BASE}/admin/metrics`, {
+    const base = getApiBase();
+    const res = await axios.get(`${base}/admin/metrics`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async getAdminScans(token: string): Promise<any[]> {
-    const res = await axios.get(`${API_BASE}/admin/scans`, {
+    const base = getApiBase();
+    const res = await axios.get(`${base}/admin/scans`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async getAdminAudits(token: string): Promise<AuditRequest[]> {
-    const res = await axios.get(`${API_BASE}/admin/audits`, {
+    const base = getApiBase();
+    const res = await axios.get(`${base}/admin/audits`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async updateAuditStatus(id: string, data: { status?: string; payment_status?: string }, token: string): Promise<AuditRequest> {
-    const res = await axios.patch(`${API_BASE}/admin/audits/${id}`, data, {
+    const base = getApiBase();
+    const res = await axios.patch(`${base}/admin/audits/${id}`, data, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async createAdminNote(data: { target_type: string; target_id: string; note: string }, token: string): Promise<any> {
-    const res = await axios.post(`${API_BASE}/admin/notes`, data, {
+    const base = getApiBase();
+    const res = await axios.post(`${base}/admin/notes`, data, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async getAdminNotes(target_type: string, target_id: string, token: string): Promise<any[]> {
-    const res = await axios.get(`${API_BASE}/admin/notes/${target_type}/${target_id}`, {
+    const base = getApiBase();
+    const res = await axios.get(`${base}/admin/notes/${target_type}/${target_id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
   },
 
   async purgeExpiredFiles(token: string): Promise<any> {
-    const res = await axios.post(`${API_BASE}/admin/retention/purge`, {}, {
+    const base = getApiBase();
+    const res = await axios.post(`${base}/admin/retention/purge`, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;

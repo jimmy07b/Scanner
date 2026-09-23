@@ -24,3 +24,15 @@ export function formatDate(dateString: string) {
     minute: "2-digit",
   });
 }
+
+export function parseApiError(err: any, fallback: string): string {
+  if (err.response?.data?.detail) {
+    if (typeof err.response.data.detail === "string") return err.response.data.detail;
+    if (Array.isArray(err.response.data.detail)) {
+      return err.response.data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(", ");
+    }
+  }
+  if (err.message && err.message !== "Network Error") return err.message;
+  return `${fallback} (Backend service may be starting up, please allow 15-30s and try again)`;
+}
+

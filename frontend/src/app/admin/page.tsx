@@ -219,7 +219,7 @@ export default function AdminPage() {
           </form>
 
           <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-500 text-center">
-            Default credentials initialized: admin@rootlayer.io
+            Protected Administrative Gateway • Authorized Personnel Only
           </div>
         </div>
       </div>

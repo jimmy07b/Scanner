@@ -6,9 +6,9 @@ services:
     container_name: aegisscan-postgres
     restart: always
     environment:
-      POSTGRES_USER: aegis
-      POSTGRES_PASSWORD: aegissecretpassword2026
-      POSTGRES_DB: aegisscan_db
+      POSTGRES_USER: ${POSTGRES_USER:-aegis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_postgres_password}
+      POSTGRES_DB: ${POSTGRES_DB:-aegisscan_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -45,11 +45,11 @@ services:
     environment:
       ENVIRONMENT: production
       DEBUG: "False"
-      DATABASE_URL: postgresql+asyncpg://aegis:aegissecretpassword2026@postgres:5432/aegisscan_db
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aegis}:${POSTGRES_PASSWORD:-change_this_postgres_password}@postgres:5432/${POSTGRES_DB:-aegisscan_db}
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: aegis_super_secret_jwt_key_startup_mvp_2026_change_in_prod
-      ADMIN_DEFAULT_EMAIL: admin@aegisscan.com
-      ADMIN_DEFAULT_PASSWORD: AegisScan2026!Secure
+      SECRET_KEY: ${SECRET_KEY:-change_this_jwt_secret_key_in_production}
+      ADMIN_DEFAULT_EMAIL: ${ADMIN_DEFAULT_EMAIL:-admin@rootlayer.io}
+      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-change_this_admin_password}
       RETENTION_HOURS: 24
     ports:
       - "8000:8000"

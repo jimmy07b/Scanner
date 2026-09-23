@@ -47,7 +47,7 @@ uvicorn app.main:app --reload --port 8000
 ```
 - API will be accessible at: `http://localhost:8000`
 - Interactive OpenAPI Docs: `http://localhost:8000/docs`
-- Default Admin Account: `admin@aegisscan.com` / `AegisScan2026!Secure`
+- Admin credentials configured via `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD` in `.env`
 
 #### 2. Frontend (Next.js 14 + Tailwind CSS)
 ```bash
@@ -95,9 +95,10 @@ All 9 test suites verify:
 
 ---
 
-## 🔒 Security Credentials
-
-- **Admin Login**: `/admin`
-- **Default Email**: `admin@aegisscan.com`
-- **Default Password**: `AegisScan2026!Secure`
-*(Remember to update `SECRET_KEY` and admin credentials via environment variables in production)*
+## 🔒 Authentication & Access
+ 
+ - **Admin Portal**: `/admin`
+ - Set your custom credentials via environment variables:
+   - `ADMIN_DEFAULT_EMAIL`
+   - `ADMIN_DEFAULT_PASSWORD`
+   - `SECRET_KEY` (must be a secure 32+ character random string in production)

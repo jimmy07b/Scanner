@@ -17,6 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { parseApiError } from "@/lib/utils";
 
 export default function WebsiteAuditPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function WebsiteAuditPage() {
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
       setError(
-        err.response?.data?.detail || "Audit job creation failed. Verify the URL and try again."
+        parseApiError(err, "Website audit failed. Please check the URL and try again.")
       );
       setLoading(false);
     }

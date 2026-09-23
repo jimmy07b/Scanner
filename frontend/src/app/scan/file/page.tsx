@@ -14,7 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, parseApiError } from "@/lib/utils";
 
 export default function FileScannerPage() {
   const router = useRouter();
@@ -70,7 +70,7 @@ export default function FileScannerPage() {
       const res = await api.startFileScan(file, authorized);
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Scanning failed. Please try again.");
+      setError(parseApiError(err, "Scanning failed. Please try again."));
     } finally {
       setLoading(false);
     }

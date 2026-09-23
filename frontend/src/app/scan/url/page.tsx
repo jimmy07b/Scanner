@@ -15,6 +15,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { parseApiError } from "@/lib/utils";
 
 export default function UrlCheckPage() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function UrlCheckPage() {
       router.push(`/reports/${res.scan_id}`);
     } catch (err: any) {
       setError(
-        err.response?.data?.detail || "URL check failed. Verify the URL format and try again."
+        parseApiError(err, "URL check failed. Verify the URL format and try again.")
       );
       setLoading(false);
     }

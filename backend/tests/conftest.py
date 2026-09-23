@@ -21,6 +21,9 @@ async def _init_tables():
                 is_active=True
             ))
             await db.commit()
+        else:
+            admin.hashed_password = hash_password(settings.ADMIN_DEFAULT_PASSWORD)
+            await db.commit()
 
 # Run table initialization once before tests
 asyncio.run(_init_tables())
