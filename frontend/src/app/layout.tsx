@@ -106,12 +106,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#090d16] text-slate-100 antialiased">
+      <body className="min-h-screen flex flex-col bg-[#070b12] text-slate-100 font-sans antialiased selection:bg-[#71C9CE]/25 selection:text-[#E3FDFD]">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

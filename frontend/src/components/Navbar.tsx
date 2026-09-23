@@ -8,16 +8,16 @@ export const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0b101b]/95 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-[#1a293e] bg-[#070b12]/95 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/80 flex items-center justify-center text-slate-200 group-hover:border-slate-500 transition">
-              <Shield className="w-4 h-4 text-slate-300" />
+            <div className="w-8 h-8 rounded-lg bg-[#0d1522] border border-[#71C9CE]/40 flex items-center justify-center text-[#71C9CE] group-hover:border-[#71C9CE] group-hover:shadow-sm group-hover:shadow-[#71C9CE]/20 transition">
+              <Shield className="w-4 h-4 text-[#71C9CE]" />
             </div>
-            <span className="font-bold text-base tracking-tight text-white">
+            <span className="font-bold text-base tracking-tight text-white group-hover:text-[#E3FDFD] transition">
               RootLayer
             </span>
           </Link>
@@ -26,23 +26,23 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center gap-4 text-xs font-medium text-slate-400">
             <Link
               href="/scan/website"
-              className="text-slate-200 hover:text-white transition-colors flex items-center gap-1.5"
+              className="text-[#CBF1F5] hover:text-[#E3FDFD] transition-colors flex items-center gap-1.5"
             >
-              <Globe className="w-3.5 h-3.5 text-slate-400" />
+              <Globe className="w-3.5 h-3.5 text-[#71C9CE]" />
               <span>Website Audit</span>
             </Link>
-            <span className="text-slate-700">·</span>
+            <span className="text-[#1a293e]">·</span>
             <Link
               href="/scan/url"
-              className="hover:text-slate-200 transition-colors flex items-center gap-1.5"
+              className="hover:text-[#CBF1F5] transition-colors flex items-center gap-1.5"
             >
               <Radio className="w-3.5 h-3.5 text-slate-400" />
               <span>URL Check</span>
             </Link>
-            <span className="text-slate-700">·</span>
+            <span className="text-[#1a293e]">·</span>
             <Link
               href="/scan/file"
-              className="hover:text-slate-200 transition-colors flex items-center gap-1.5"
+              className="hover:text-[#CBF1F5] transition-colors flex items-center gap-1.5"
             >
               <FileSearch className="w-3.5 h-3.5 text-slate-400" />
               <span>File Scanner</span>

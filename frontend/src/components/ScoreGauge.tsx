@@ -17,8 +17,8 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
   const offset = circumference - (score / 100) * circumference;
 
   const getColor = (val: number) => {
-    if (val === 0) return "#16a34a"; // Muted green
-    if (val <= 25) return "#475569"; // Muted slate
+    if (val === 0) return "#71C9CE"; // Clean teal
+    if (val <= 25) return "#A6E3E9"; // Soft cyan
     if (val <= 50) return "#d97706"; // Muted amber
     if (val <= 75) return "#ea580c"; // Muted orange
     return "#dc2626"; // Muted deep red
@@ -34,7 +34,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#27272a"
+          stroke="#1a293e"
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -53,10 +53,10 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center text-center">
-        <span className="text-2xl font-bold font-mono text-zinc-100">
+        <span className="text-2xl font-bold font-mono text-[#E3FDFD]">
           {score}
         </span>
-        <span className="text-[9px] uppercase font-mono font-semibold text-zinc-400 tracking-wider">
+        <span className="text-[9px] uppercase font-mono font-semibold text-[#A6E3E9] tracking-wider">
           / 100 Risk
         </span>
       </div>

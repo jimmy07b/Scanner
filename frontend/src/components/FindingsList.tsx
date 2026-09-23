@@ -49,14 +49,14 @@ export const FindingsList: React.FC<FindingsListProps> = ({ findings }) => {
             disabled={opt.count === 0 && opt.value !== "all"}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
               filter === opt.value
-                ? "bg-slate-800 text-white border border-slate-700 font-semibold"
+                ? "bg-[#131e2e] text-[#E3FDFD] border border-[#71C9CE] font-semibold shadow-sm"
                 : opt.count === 0
-                ? "bg-slate-900/40 text-slate-600 cursor-not-allowed"
-                : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+                ? "bg-[#0d1522]/40 text-slate-600 cursor-not-allowed border border-[#1a293e]/40"
+                : "bg-[#0d1522] text-slate-400 hover:text-[#CBF1F5] border border-[#1a293e] hover:border-[#324b6d]"
             }`}
           >
             {opt.label}
-            <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] font-mono">
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${filter === opt.value ? "bg-[#71C9CE]/20 text-[#CBF1F5]" : "bg-[#070b12] text-slate-400"}`}>
               {opt.count}
             </span>
           </button>

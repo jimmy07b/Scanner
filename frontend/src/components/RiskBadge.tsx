@@ -58,7 +58,12 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
     },
     low: {
       label: "Low Risk",
-      bg: "bg-slate-800/80 text-slate-300 border-slate-700/80",
+      bg: "bg-[#71C9CE]/15 text-[#CBF1F5] border-[#71C9CE]/35",
+      icon: Info,
+    },
+    info: {
+      label: "Informational",
+      bg: "bg-[#A6E3E9]/15 text-[#E3FDFD] border-[#A6E3E9]/35",
       icon: Info,
     },
     medium: {
@@ -120,11 +125,6 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
       label: "Execution Failed",
       bg: "bg-red-950/50 text-red-400 border-red-800/70",
       icon: XCircle,
-    },
-    info: {
-      label: "Informational",
-      bg: "bg-zinc-800/80 text-zinc-400 border-zinc-700",
-      icon: Info,
     },
   };
 

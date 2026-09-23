@@ -150,9 +150,9 @@ export default function HomePage() {
               const el = document.getElementById("website-input");
               if (el) el.focus();
             }}
-            className="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-white text-slate-900 text-xs sm:text-sm font-semibold transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 rounded-lg bg-[#71C9CE] hover:bg-[#A6E3E9] text-[#070b12] text-xs sm:text-sm font-bold shadow-lg shadow-[#71C9CE]/25 transition flex items-center gap-2"
           >
-            <Globe className="w-4 h-4 text-slate-700" />
+            <Globe className="w-4 h-4 text-[#070b12]" />
             <span>Start Website Audit</span>
           </button>
           <button
@@ -162,9 +162,9 @@ export default function HomePage() {
               const el = document.getElementById("url-input");
               if (el) el.focus();
             }}
-            className="px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs sm:text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 rounded-lg bg-[#0d1522] hover:bg-[#131e2e] text-[#CBF1F5] hover:text-[#E3FDFD] border border-[#1a293e] hover:border-[#71C9CE] text-xs sm:text-sm font-medium transition flex items-center gap-2"
           >
-            <Radio className="w-4 h-4 text-slate-400" />
+            <Radio className="w-4 h-4 text-[#71C9CE]" />
             <span>Run URL Check</span>
           </button>
           <button
@@ -174,9 +174,9 @@ export default function HomePage() {
               const el = document.getElementById("file-upload-input");
               if (el) el.click();
             }}
-            className="px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs sm:text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 rounded-lg bg-[#0d1522] hover:bg-[#131e2e] text-[#CBF1F5] hover:text-[#E3FDFD] border border-[#1a293e] hover:border-[#71C9CE] text-xs sm:text-sm font-medium transition flex items-center gap-2"
           >
-            <FileSearch className="w-4 h-4 text-slate-400" />
+            <FileSearch className="w-4 h-4 text-[#71C9CE]" />
             <span>Scan File</span>
           </button>
         </div>
@@ -192,11 +192,11 @@ export default function HomePage() {
         </div>
 
         {/* Focused Scanner Box */}
-        <div className="rounded-2xl border border-slate-800 bg-[#0f172a] p-6 sm:p-8 text-left">
+        <div className="rounded-2xl border border-[#1a293e] bg-[#0d1522] p-6 sm:p-8 text-left shadow-2xl">
           
           {/* Engine Selector Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-slate-800">
-            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-lg bg-[#090d16] border border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-[#1a293e]">
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-lg bg-[#070b12] border border-[#1a293e]">
               
               {/* Tab 1: Website Security Audit */}
               <button
@@ -204,11 +204,11 @@ export default function HomePage() {
                 onClick={() => setActiveEngine("website")}
                 className={`px-4 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
                   activeEngine === "website"
-                    ? "bg-slate-800 text-white"
+                    ? "bg-[#131e2e] text-[#E3FDFD] border border-[#71C9CE]/40 shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                <Globe className="w-3.5 h-3.5 text-[#71C9CE]" />
                 <span>Website Security Audit</span>
               </button>
 
@@ -218,11 +218,11 @@ export default function HomePage() {
                 onClick={() => setActiveEngine("url")}
                 className={`px-4 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
                   activeEngine === "url"
-                    ? "bg-slate-800 text-white"
+                    ? "bg-[#131e2e] text-[#E3FDFD] border border-[#71C9CE]/40 shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Radio className="w-3.5 h-3.5 text-slate-400" />
+                <Radio className="w-3.5 h-3.5 text-[#71C9CE]" />
                 <span>URL Threat Check</span>
               </button>
 
@@ -232,11 +232,11 @@ export default function HomePage() {
                 onClick={() => setActiveEngine("file")}
                 className={`px-4 py-2 rounded-md text-xs font-medium transition-colors flex items-center gap-2 ${
                   activeEngine === "file"
-                    ? "bg-slate-800 text-white"
+                    ? "bg-[#131e2e] text-[#E3FDFD] border border-[#71C9CE]/40 shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <FileSearch className="w-3.5 h-3.5 text-slate-400" />
+                <FileSearch className="w-3.5 h-3.5 text-[#71C9CE]" />
                 <span>Static File Scanner</span>
               </button>
             </div>
@@ -262,16 +262,16 @@ export default function HomePage() {
                   value={siteInput}
                   onChange={(e) => setSiteInput(e.target.value)}
                   disabled={siteLoading}
-                  className="flex-1 text-sm px-4 py-3 rounded-lg bg-[#090d16] border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-600 transition-colors disabled:opacity-50"
+                  className="flex-1 text-sm px-4 py-3 rounded-lg bg-[#070b12] border border-[#1a293e] text-[#E3FDFD] placeholder-slate-500 focus:outline-none focus:border-[#71C9CE] transition-colors disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={siteLoading}
-                  className="px-6 py-3 rounded-lg bg-slate-100 hover:bg-white disabled:opacity-50 text-slate-900 text-sm font-semibold transition-colors flex items-center justify-center gap-2 shrink-0"
+                  className="px-6 py-3 rounded-lg bg-[#71C9CE] hover:bg-[#A6E3E9] disabled:opacity-50 text-[#070b12] text-sm font-bold shadow-md shadow-[#71C9CE]/25 transition-colors flex items-center justify-center gap-2 shrink-0"
                 >
                   {siteLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-[#070b12] border-t-transparent rounded-full animate-spin" />
                       <span>Auditing...</span>
                     </>
                   ) : (
@@ -326,16 +326,16 @@ export default function HomePage() {
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   disabled={urlLoading}
-                  className="flex-1 text-sm px-4 py-3 rounded-lg bg-[#090d16] border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-600 transition-colors disabled:opacity-50"
+                  className="flex-1 text-sm px-4 py-3 rounded-lg bg-[#070b12] border border-[#1a293e] text-[#E3FDFD] placeholder-slate-500 focus:outline-none focus:border-[#71C9CE] transition-colors disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={urlLoading}
-                  className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 hover:text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shrink-0 border border-slate-700"
+                  className="px-6 py-3 rounded-lg bg-[#71C9CE] hover:bg-[#A6E3E9] disabled:opacity-50 text-[#070b12] text-sm font-bold shadow-md shadow-[#71C9CE]/25 transition-colors flex items-center justify-center gap-2 shrink-0"
                 >
                   {urlLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-[#070b12] border-t-transparent rounded-full animate-spin" />
                       <span>Checking...</span>
                     </>
                   ) : (
@@ -374,10 +374,10 @@ export default function HomePage() {
                 }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
-                className={`cursor-pointer block text-center py-8 px-4 rounded-xl border border-dashed transition-colors text-xs ${
+                className={`cursor-pointer block text-center py-8 px-4 rounded-xl border border-dashed transition-all text-xs ${
                   dragActive
-                    ? "border-slate-500 bg-slate-800/40 text-slate-200"
-                    : "border-slate-800 hover:border-slate-700 bg-[#090d16] text-slate-400 hover:text-slate-300"
+                    ? "border-[#71C9CE] bg-[#131e2e] text-[#E3FDFD] shadow-lg shadow-[#71C9CE]/10"
+                    : "border-[#1a293e] hover:border-[#71C9CE]/60 bg-[#070b12] text-slate-400 hover:text-[#CBF1F5]"
                 }`}
               >
                 <input
@@ -388,13 +388,17 @@ export default function HomePage() {
                   disabled={fileLoading}
                 />
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                    <Upload className="w-5 h-5 text-slate-400" />
+                  <div className="w-10 h-10 rounded-full bg-[#0d1522] border border-[#1a293e] flex items-center justify-center text-[#71C9CE]">
+                    <Upload className="w-5 h-5 text-[#71C9CE]" />
                   </div>
-                  <span className="font-medium text-sm text-slate-200">
-                    {fileLoading ? "Analyzing File Statically..." : "Click or drag file to analyze"}
-                  </span>
-                  <span className="text-slate-500 text-[11px]">Supports PNG, JPG, PDF, ZIP, DOCX (Up to 50MB)</span>
+                  <div className="space-y-0.5">
+                    <p className="font-semibold text-[#E3FDFD]">
+                      Click to upload or drag &amp; drop archive
+                    </p>
+                    <p className="text-slate-500 text-[11px]">
+                      Safe static structure analysis (ZIP, tar, docs up to 50MB)
+                    </p>
+                  </div>
                 </div>
               </label>
 
