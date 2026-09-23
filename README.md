@@ -1,6 +1,30 @@
-# AegisScan — Privacy-First Static Security Scanning & Website Audit Platform
+# RootLayer (AegisScan) — Precision Cybersecurity & Threat Analysis Platform
 
-AegisScan is a production-ready cybersecurity MVP platform designed to provide automated static security inspection for files (PDFs, Office documents, images, archives) and website HTTP hygiene audits, with a paid manual audit flow (₹1,999) for deeper web app defense.
+[![Live App](https://img.shields.io/badge/Live%20Application-scanner--ywmt.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://scanner-ywmt.vercel.app/)
+[![API Backend](https://img.shields.io/badge/API%20Service-scanner--mtxg.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://scanner-mtxg.onrender.com/health)
+[![API Docs](https://img.shields.io/badge/Swagger%20Docs-OpenAPI%203.0-0284c7?style=for-the-badge&logo=swagger&logoColor=white)](https://scanner-mtxg.onrender.com/docs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-slate?style=for-the-badge)](LICENSE)
+
+---
+
+## 🌐 Live Production Deployment
+
+Access the live platform directly online:
+
+| Resource | Direct Link | Description |
+| :--- | :--- | :--- |
+| 🚀 **Live Web Application** | **[https://scanner-ywmt.vercel.app](https://scanner-ywmt.vercel.app)** | Production frontend deployed on Vercel Edge CDN |
+| 🔍 **Website Security Audit** | **[https://scanner-ywmt.vercel.app/scan/website](https://scanner-ywmt.vercel.app/scan/website)** | Live SSL, DNS, HTTP headers, & tech stack audit |
+| 🎣 **URL Threat & Phishing Check** | **[https://scanner-ywmt.vercel.app/scan/url](https://scanner-ywmt.vercel.app/scan/url)** | Real-time phishing, malware, & redirect analysis |
+| 📁 **Static File Scanner** | **[https://scanner-ywmt.vercel.app/scan/file](https://scanner-ywmt.vercel.app/scan/file)** | Deep static inspection of PDFs, Office docs, & archives |
+| ⚡ **Backend API Service** | **[https://scanner-mtxg.onrender.com](https://scanner-mtxg.onrender.com)** | FastAPI asynchronous backend running on Render |
+| 📖 **Interactive OpenAPI Docs** | **[https://scanner-mtxg.onrender.com/docs](https://scanner-mtxg.onrender.com/docs)** | Interactive Swagger UI for testing API endpoints |
+| 🗺️ **XML Sitemap** | **[https://scanner-ywmt.vercel.app/sitemap.xml](https://scanner-ywmt.vercel.app/sitemap.xml)** | Search engine indexing sitemap |
+| 🤖 **Robots Policy** | **[https://scanner-ywmt.vercel.app/robots.txt](https://scanner-ywmt.vercel.app/robots.txt)** | Production crawl directives |
+
+---
+
+RootLayer is a production-grade, evidence-first cybersecurity platform providing automated static security inspection for files, website security posture audits, and real-time URL phishing/malware threat intelligence.
 
 ---
 
