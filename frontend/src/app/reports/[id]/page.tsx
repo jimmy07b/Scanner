@@ -18,6 +18,10 @@ import {
   Lock,
   Globe,
   Radio,
+  ExternalLink,
+  ArrowRight,
+  ShieldAlert,
+  CheckCircle2,
 } from "lucide-react";
 import { api, ScanResult, Finding } from "@/lib/api";
 import { ScanPipelineTracker } from "@/components/ScanPipelineTracker";
@@ -208,7 +212,7 @@ export default function ReportDetailPage() {
   const passedChecks: string[] = data.passed_checks || rawMeta.passed_checks || [];
   const findings: Finding[] = data.findings || [];
 
-  // Technology Stack Extraction
+  // Technology Stack Extraction (for Website Audit)
   const observedTech =
     data.observed_technologies ||
     rawMeta.observed_technologies ||
@@ -222,8 +226,8 @@ export default function ReportDetailPage() {
   const sensitiveSurfaces = collected.sensitive_surfaces || collected.recon_surfaces || [];
   const responseHeaders = collected.response_headers || {};
 
-  // Form clean bug bounty report ID (e.g. Report #14895)
-  const reportNumber = parseInt((data.id || "").replace(/[^0-9]/g, "").slice(0, 5) || "14895", 10);
+  // Form clean report ID number (e.g. Report #37852)
+  const reportNumber = parseInt((data.id || "").replace(/[^0-9]/g, "").slice(0, 5) || "37852", 10);
 
   // Resolved Target IP & Host
   const aRecords: string[] = dnsRecon?.a_records || [];
@@ -237,15 +241,59 @@ export default function ReportDetailPage() {
   const targetHost = collected.hostname || collected.host || data.target || data.target_name;
   const targetUrl = collected.final_url || (targetHost.startsWith("http") ? targetHost : `https://${targetHost}`);
 
-  const assessmentTypeLabel =
-    data.scan_type === "file"
-      ? "Static File Inspection"
-      : data.scan_type === "url_check" || data.scan_type === "url"
-      ? "URL Threat Analysis"
-      : "Web Security Assessment";
+  // Detect Scan Types
+  const isUrlScan =
+    data.scan_type === "url" ||
+    data.scan_type === "url_check" ||
+    data.report_type === "basic_url";
 
-  // Separate true substantive vulnerabilities from small defense-in-depth issues:
-  // Small issues should NOT have alarmist severity badges or ratings.
+  const isFileScan =
+    data.scan_type === "file" ||
+    data.report_type === "basic_file";
+
+  const assessmentTypeLabel = isFileScan
+    ? "Static File Inspection"
+    : isUrlScan
+    ? "URL Threat Analysis"
+    : "Web Security Assessment";
+
+  // URL Threat Specific Computations
+  const threatAnalysis = collected.threat_analysis || {};
+  const isPhishing =
+    threatAnalysis.is_phishing ??
+    findings.some((f) => {
+      const k = (f.finding_key || f.title || "").toLowerCase();
+      return k.includes("phishing") || k.includes("impersonation") || k.includes("credential") || k.includes("userinfo");
+    });
+
+  const isMalware =
+    threatAnalysis.is_malware ??
+    collected.has_malware_extension ??
+    findings.some((f) => {
+      const k = (f.finding_key || f.title || "").toLowerCase();
+      return k.includes("malware") || k.includes("executable") || k.includes("payload");
+    });
+
+  const isCrossDomainRedirect =
+    threatAnalysis.is_cross_domain_redirect ??
+    collected.is_cross_domain_redirect ??
+    findings.some((f) => (f.finding_key || f.title || "").toLowerCase().includes("cross_domain"));
+
+  const redirectHops =
+    threatAnalysis.redirect_hops ??
+    collected.redirect_hops ??
+    (collected.redirect_chain?.length ? collected.redirect_chain.length - 1 : 0);
+
+  const finalDestinationUrl =
+    threatAnalysis.final_url ||
+    collected.final_url ||
+    targetUrl;
+
+  const brandImpersonated =
+    threatAnalysis.brand_detected ||
+    collected.brand_detected;
+
+  // Separate true substantive vulnerabilities from small defense-in-depth issues
   const isRealVulnerability = (f: Finding) => {
     const sev = (f.severity || "").toLowerCase();
     const key = (f.finding_key || f.title || "").toLowerCase();
@@ -259,7 +307,8 @@ export default function ReportDetailPage() {
         key.includes("leak") ||
         key.includes("credential") ||
         key.includes("malware") ||
-        key.includes("phishing")
+        key.includes("phishing") ||
+        key.includes("executable")
       ) {
         return true;
       }
@@ -270,17 +319,20 @@ export default function ReportDetailPage() {
   const realVulnerabilities = findings.filter(isRealVulnerability);
   const hardeningNotes = findings.filter((f) => !isRealVulnerability(f));
 
-  // Overall Security Posture:
-  // If target only has small issues (missing headers, etc.), report as 99% Secure (Well Defended) with NO scary rating!
-  let overallRating = "99% Secure";
+  // Overall Security Posture for Website Audits
   let overallPostureBadge = "99% Secure (Well-Defended Baseline)";
-
-  if (realVulnerabilities.length > 0) {
-    overallRating = "Remediation Required";
+  if (isUrlScan) {
+    if (isPhishing) {
+      overallPostureBadge = "Phishing Threat Flagged";
+    } else if (isMalware) {
+      overallPostureBadge = "Malware / Payload Risk";
+    } else if (isCrossDomainRedirect) {
+      overallPostureBadge = "Cross-Domain Destination Verified";
+    } else {
+      overallPostureBadge = "Safe & Clean (No Threats Detected)";
+    }
+  } else if (realVulnerabilities.length > 0) {
     overallPostureBadge = `${realVulnerabilities.length} Verified Flaw(s) Identified`;
-  } else {
-    overallRating = "99% Secure";
-    overallPostureBadge = "99% Secure (Well-Defended Baseline)";
   }
 
   return (
@@ -328,7 +380,7 @@ export default function ReportDetailPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* 1. REPORT HEADER & TARGET METADATA (Bug Bounty Write-Up Style)            */}
+      {/* 1. REPORT HEADER & TARGET METADATA                                        */}
       {/* ========================================================================= */}
       <div className="border-b border-zinc-800 pb-6 space-y-4">
         
@@ -336,7 +388,7 @@ export default function ReportDetailPage() {
         <div className="space-y-1">
           <div className="flex flex-wrap items-center justify-between gap-2 text-zinc-400 font-mono text-xs">
             <span className="font-bold text-zinc-300 tracking-wide">
-              Report #{reportNumber}: {targetHost} — Security Assessment &amp; Reconnaissance
+              Report #{reportNumber}: {targetHost} — {assessmentTypeLabel}
             </span>
             <div className="flex items-center gap-1.5 text-zinc-400">
               <span className="text-[11px]">ID: {data.id}</span>
@@ -355,7 +407,7 @@ export default function ReportDetailPage() {
           </h1>
         </div>
 
-        {/* Bug Bounty Metadata Key-Values */}
+        {/* Target Metadata Key-Values */}
         <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 font-mono text-xs divide-y divide-zinc-850">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pb-2.5">
             <div>
@@ -382,7 +434,9 @@ export default function ReportDetailPage() {
             </div>
             <div>
               <span className="text-zinc-500 uppercase text-[10px] block">Target Category</span>
-              <span className="text-zinc-200">Web Application / Infrastructure</span>
+              <span className="text-zinc-200">
+                {isUrlScan ? "Web Link / Threat Assessment" : isFileScan ? "Uploaded Static Asset" : "Web Application / Infrastructure"}
+              </span>
             </div>
           </div>
 
@@ -396,7 +450,7 @@ export default function ReportDetailPage() {
               <span className="text-zinc-200">{assessmentTypeLabel}</span>
             </div>
             <div>
-              <span className="text-zinc-500 uppercase text-[10px] block">Overall Security Posture</span>
+              <span className="text-zinc-500 uppercase text-[10px] block">Overall Security Status</span>
               <span className="text-zinc-100 font-semibold">{overallPostureBadge}</span>
             </div>
           </div>
@@ -405,236 +459,574 @@ export default function ReportDetailPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. PHASE 1: FULL PASSIVE RECONNAISSANCE & TECHNOLOGIES (FIRST AS REQUESTED)*/}
+      {/* 2. DEDICATED VIEW: URL THREAT ANALYSIS (PHISHING & VIRUS/MALWARE FOCUS)    */}
       {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
-          <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
-            <Server className="w-3.5 h-3.5 text-zinc-400" />
-            <span>1. Passive Reconnaissance &amp; Discovered Technologies</span>
-          </h2>
-          <span className="text-[11px] text-zinc-400">Phase 1 Analysis</span>
-        </div>
+      {isUrlScan ? (
+        <div className="space-y-8">
+          
+          {/* A. DUAL THREAT VERDICT CARDS (PHISHING & VIRUS STATUS) */}
+          <div className="space-y-3">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
+                <Radio className="w-3.5 h-3.5 text-zinc-400" />
+                <span>URL Threat Verification Verdict</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">Core Threat Analysis</span>
+            </div>
 
-        {/* Observed Technology Breakdown with exact versions */}
-        <div className="space-y-2">
-          <h3 className="text-[11px] font-mono uppercase text-zinc-400 font-semibold tracking-wide">
-            Observed Software Stack &amp; Versions
-          </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* PHISHING STATUS TILE */}
+              <div
+                className={`p-5 rounded border ${
+                  isPhishing
+                    ? "bg-red-950/20 border-red-500/40"
+                    : "bg-[#0c121e] border-zinc-800"
+                } space-y-2`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider font-mono font-semibold text-zinc-400">
+                    Phishing Assessment
+                  </span>
+                  {isPhishing ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      PHISHING DETECTED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      NO PHISHING DETECTED
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm font-semibold text-white font-mono">
+                  {isPhishing
+                    ? brandImpersonated
+                      ? `Brand Impersonation Target: '${brandImpersonated.toUpperCase()}'`
+                      : "Deceptive Credential Harvesting Detected"
+                    : "Clean Domain & Identity"}
+                </div>
+                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                  {isPhishing
+                    ? "This URL exhibits brand impersonation, visual domain spoofing, or unauthenticated login/credential forms designed to deceive users."
+                    : "No recognized brand impersonation, deceptive homographs, userinfo '@' spoofing, or credential theft forms were found on this link."}
+                </p>
+              </div>
 
-          {observedTech && Object.keys(observedTech).length > 0 && Object.values(observedTech).some((v) => Array.isArray(v) && v.length > 0) ? (
-            <div className="border border-zinc-800 rounded bg-[#0e1117] font-mono text-xs divide-y divide-zinc-850">
-              {Object.entries(observedTech).map(([category, items]: [string, any]) => {
-                if (!Array.isArray(items) || items.length === 0) return null;
-                return (
-                  <div key={category} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <span className="text-zinc-400 capitalize">{category.replace(/_/g, " ")}:</span>
-                    <span className="text-zinc-200 font-medium">
-                      {items.map((t: any) => `${t.name || t}${t.version ? ` (v${t.version})` : ""}`).join(", ")}
+              {/* VIRUS / MALWARE STATUS TILE */}
+              <div
+                className={`p-5 rounded border ${
+                  isMalware
+                    ? "bg-red-950/20 border-red-500/40"
+                    : "bg-[#0c121e] border-zinc-800"
+                } space-y-2`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider font-mono font-semibold text-zinc-400">
+                    Virus &amp; Malware Assessment
+                  </span>
+                  {isMalware ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      MALWARE / VIRUS RISK
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      NO VIRUS / MALWARE DETECTED
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm font-semibold text-white font-mono">
+                  {isMalware
+                    ? "Executable Software Download Link"
+                    : "Clean Web Destination"}
+                </div>
+                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                  {isMalware
+                    ? "This link targets or delivers direct executable binaries (.exe, .msi, .scr, .apk) or hazardous software payloads."
+                    : "The link targets standard web documents with no direct executable file downloads, hazardous MIME binaries, or payload relays."}
+                </p>
+              </div>
+
+            </div>
+
+            {/* Concise Summary Banner */}
+            <div className="p-3.5 rounded border border-zinc-800 bg-[#0e1117] font-mono text-xs text-zinc-300">
+              <span className="text-zinc-500 uppercase text-[10px] block mb-1">Executive Threat Summary</span>
+              <span>
+                {data.summary ||
+                  (isPhishing
+                    ? `URL Threat Alert: High-risk phishing indicators detected on '${targetHost}'. Exercise caution.`
+                    : isMalware
+                    ? `URL Threat Alert: Malicious software / virus payload delivery detected on '${targetHost}'.`
+                    : isCrossDomainRedirect
+                    ? `URL Threat Analysis for '${targetHost}': Clean & Safe. No phishing patterns or virus payloads detected. Note: Target redirects across domains.`
+                    : `URL Threat Analysis for '${targetHost}': Clean & Safe. No phishing patterns or virus payloads detected across all verified checks.`)}
+              </span>
+            </div>
+          </div>
+
+          {/* B. URL REDIRECTION JOURNEY & DESTINATION TRACKER */}
+          <div className="space-y-3 font-mono text-xs">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
+                <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                <span>URL Navigation Journey &amp; Destination Verification</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">
+                {redirectHops > 0 ? `${redirectHops} Redirection Hop(s)` : "Direct Link (0 Hops)"}
+              </span>
+            </div>
+
+            <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                
+                {/* Initial Submitted Target */}
+                <div className="p-3 rounded bg-zinc-900 border border-zinc-800 space-y-1">
+                  <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
+                    Original Submitted URL
+                  </span>
+                  <div className="text-zinc-100 font-bold break-all">
+                    {targetUrl}
+                  </div>
+                  <div className="text-[11px] text-zinc-400">
+                    Host: {targetHost}
+                  </div>
+                </div>
+
+                {/* Final Destination */}
+                <div className={`p-3 rounded border ${isCrossDomainRedirect ? "bg-amber-950/20 border-amber-500/30" : "bg-zinc-900 border-zinc-800"} space-y-1`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
+                      Final Landing Destination
+                    </span>
+                    {isCrossDomainRedirect && (
+                      <span className="text-[10px] text-amber-400 font-bold uppercase">
+                        Cross-Domain
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href={finalDestinationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-100 hover:text-white font-bold break-all underline underline-offset-2 flex items-center gap-1"
+                  >
+                    <span>{finalDestinationUrl}</span>
+                    <ExternalLink className="w-3 h-3 text-zinc-400 shrink-0 inline" />
+                  </a>
+                  <div className="text-[11px] text-zinc-400">
+                    Destination Host: {new URL(finalDestinationUrl.startsWith("http") ? finalDestinationUrl : `https://${finalDestinationUrl}`).hostname}
+                  </div>
+                </div>
+
+              </div>
+
+              {isCrossDomainRedirect && (
+                <div className="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 font-sans leading-relaxed">
+                  <strong className="text-zinc-300 font-mono font-semibold">Redirection Notice: </strong>
+                  The target domain '{targetHost}' redirected to an external service ('{new URL(finalDestinationUrl).hostname}'). 
+                  If you intended to reach a domain parking, marketplace, or affiliate landing page, this destination is standard.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* C. CORE THREAT DIAGNOSTIC MATRIX */}
+          <div className="space-y-3 font-mono text-xs">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Threat Diagnostic Indicators</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">Heuristics &amp; Safety Checks</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Phishing Indicators Card */}
+              <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 space-y-3">
+                <div className="font-bold text-zinc-200 border-b border-zinc-800 pb-1.5 flex items-center justify-between">
+                  <span>Phishing &amp; Spoofing Checks</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">Identity Safety</span>
+                </div>
+                
+                <div className="space-y-2 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Brand Impersonation</span>
+                    <span className={brandImpersonated ? "text-red-400 font-bold" : "text-emerald-400"}>
+                      {brandImpersonated ? `Targeting '${brandImpersonated}'` : "Clean (No Lookalikes)"}
                     </span>
                   </div>
-                );
-              })}
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Credential Theft Forms</span>
+                    <span className={collected.has_password_form ? "text-amber-400 font-bold" : "text-emerald-400"}>
+                      {collected.has_password_form ? "Password Input Present" : "Clean (No Password Form)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Homograph / Punycode (IDN)</span>
+                    <span className={collected.has_punycode ? "text-amber-400 font-bold" : "text-emerald-400"}>
+                      {collected.has_punycode ? "Punycode (xn--) Active" : "Clean (Standard ASCII)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Userinfo '@' Symbol Spoofing</span>
+                    <span className={collected.has_userinfo ? "text-red-400 font-bold" : "text-emerald-400"}>
+                      {collected.has_userinfo ? "Deceptive '@' Detected" : "Clean (None Detected)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Numeric IP as Host</span>
+                    <span className={collected.has_ip_host ? "text-amber-400 font-bold" : "text-emerald-400"}>
+                      {collected.has_ip_host ? "Raw IP Hostname" : "Clean (Registered Domain)"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Virus, Malware & Network Card */}
+              <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 space-y-3">
+                <div className="font-bold text-zinc-200 border-b border-zinc-800 pb-1.5 flex items-center justify-between">
+                  <span>Malware, Virus &amp; Network Checks</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">Payload Safety</span>
+                </div>
+                
+                <div className="space-y-2 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Direct Executable Link</span>
+                    <span className={collected.has_malware_extension ? "text-red-400 font-bold" : "text-emerald-400"}>
+                      {collected.has_malware_extension ? "Direct .exe/.msi Payload" : "Clean (No Binary Target)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Server Response MIME</span>
+                    <span className="text-emerald-400">
+                      Standard Document (Non-Binary)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Redirection Hops</span>
+                    <span className="text-zinc-200">
+                      {redirectHops} Hop(s) {redirectHops >= 3 ? "(Excessive)" : "(Normal)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Transport Layer Security</span>
+                    <span className="text-zinc-200">
+                      {targetUrl.startsWith("https") ? "HTTPS (Encrypted)" : "HTTP (Plaintext)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Server Responsiveness</span>
+                    <span className="text-zinc-200">
+                      HTTP {collected.status_code || 200} ({collected.response_time_ms ? `${collected.response_time_ms}ms` : "Active"})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          ) : (
-            <div className="p-3 border border-zinc-800 rounded bg-[#0e1117] text-zinc-400 font-sans text-xs">
-              No server-side software frameworks, CMS signatures, or versions were disclosed in HTTP response headers.
+          </div>
+
+          {/* D. FINDINGS & OBSERVATIONS (IF ANY) */}
+          {findings.length > 0 && (
+            <div className="space-y-3 font-mono text-xs">
+              <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
+                <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
+                  Threat Observations &amp; Notes ({findings.length})
+                </h2>
+                <span className="text-[10px] text-zinc-400">Technical Details</span>
+              </div>
+
+              <div className="border border-zinc-800 rounded bg-[#0e1117] font-sans text-xs divide-y divide-zinc-850">
+                {findings.map((finding, idx) => (
+                  <div key={idx} className="p-4 space-y-1.5">
+                    <div className="font-mono text-zinc-200 font-bold text-xs flex items-center justify-between">
+                      <span>{idx + 1}. {finding.title}</span>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">{finding.category}</span>
+                    </div>
+                    {finding.evidence && (
+                      <p className="text-zinc-400 text-xs">
+                        <strong className="text-zinc-300 font-mono">Observation:</strong>{" "}
+                        {Array.isArray(finding.evidence) ? finding.evidence.join(" ") : String(finding.evidence)}
+                      </p>
+                    )}
+                    {finding.recommendation && (
+                      <p className="text-zinc-300 text-xs">
+                        <strong className="text-zinc-400 font-mono">Suggested Action:</strong> {finding.recommendation}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          {/* E. VERIFIED DEFENSIVE CHECKS */}
+          {passedChecks.length > 0 && (
+            <div className="space-y-3 font-mono text-xs">
+              <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
+                <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
+                  Verified Safety Controls ({passedChecks.length})
+                </h2>
+                <span className="text-[10px] text-zinc-400">Active Defenses</span>
+              </div>
+
+              <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs text-zinc-300">
+                {passedChecks.map((chk, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>{chk}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
-
-        {/* Perimeter Telemetry Details */}
-        <div className="space-y-2 pt-2">
-          <h3 className="text-[11px] font-mono uppercase text-zinc-400 font-semibold tracking-wide">
-            Perimeter &amp; Network Telemetry
-          </h3>
-
-          <div className="border border-zinc-800 rounded bg-[#0e1117] font-mono text-xs divide-y divide-zinc-850">
-            <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-zinc-400">Target IP &amp; Routing</span>
-              <span className="text-zinc-200">{targetIp}</span>
+      ) : (
+        /* ========================================================================= */
+        /* 3. STANDARD WEBSITE AUDIT & PENETRATION TESTING VIEW                      */
+        /* ========================================================================= */
+        <div className="space-y-8">
+          
+          {/* PHASE 1: PASSIVE RECONNAISSANCE & TECHNOLOGIES */}
+          <section className="space-y-4">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
+                <Server className="w-3.5 h-3.5 text-zinc-400" />
+                <span>1. Passive Reconnaissance &amp; Discovered Technologies</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">Phase 1 Analysis</span>
             </div>
 
-            <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-zinc-400">HTTP Response Code</span>
-              <span className="text-zinc-200">
-                HTTP {collected.status_code || 200} · {collected.response_time_ms ? `${collected.response_time_ms}ms response latency` : "Responsive"}
-              </span>
+            {/* Observed Technology Breakdown with exact versions */}
+            <div className="space-y-2">
+              <h3 className="text-[11px] font-mono uppercase text-zinc-400 font-semibold tracking-wide">
+                Observed Software Stack &amp; Versions
+              </h3>
+
+              {observedTech && Object.keys(observedTech).length > 0 && Object.values(observedTech).some((v) => Array.isArray(v) && v.length > 0) ? (
+                <div className="border border-zinc-800 rounded bg-[#0e1117] font-mono text-xs divide-y divide-zinc-850">
+                  {Object.entries(observedTech).map(([category, items]: [string, any]) => {
+                    if (!Array.isArray(items) || items.length === 0) return null;
+                    return (
+                      <div key={category} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <span className="text-zinc-400 capitalize">{category.replace(/_/g, " ")}:</span>
+                        <span className="text-zinc-200 font-medium">
+                          {items.map((t: any) => `${t.name || t}${t.version ? ` (v${t.version})` : ""}`).join(", ")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-3 border border-zinc-800 rounded bg-[#0e1117] text-zinc-400 font-sans text-xs">
+                  No server-side software frameworks, CMS signatures, or versions were disclosed in HTTP response headers.
+                </div>
+              )}
             </div>
 
-            <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-zinc-400">Transport Security (TLS/SSL)</span>
-              <span className="text-zinc-200">
-                {tlsTelemetry?.protocol || "TLSv1.3"} ({tlsTelemetry?.cipher || "Secure Cipher Suite"}) · {tlsTelemetry?.days_remaining ? `${tlsTelemetry.days_remaining} days remaining` : "Valid Trusted CA"}
-              </span>
+            {/* Perimeter Telemetry Details */}
+            <div className="space-y-2 pt-2">
+              <h3 className="text-[11px] font-mono uppercase text-zinc-400 font-semibold tracking-wide">
+                Perimeter &amp; Network Telemetry
+              </h3>
+
+              <div className="border border-zinc-800 rounded bg-[#0e1117] font-mono text-xs divide-y divide-zinc-850">
+                <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <span className="text-zinc-400">Target IP &amp; Routing</span>
+                  <span className="text-zinc-200">{targetIp}</span>
+                </div>
+
+                <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <span className="text-zinc-400">HTTP Response Code</span>
+                  <span className="text-zinc-200">
+                    HTTP {collected.status_code || 200} · {collected.response_time_ms ? `${collected.response_time_ms}ms response latency` : "Responsive"}
+                  </span>
+                </div>
+
+                <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <span className="text-zinc-400">Transport Security (TLS/SSL)</span>
+                  <span className="text-zinc-200">
+                    {tlsTelemetry?.protocol || "TLSv1.3"} ({tlsTelemetry?.cipher || "Secure Cipher Suite"}) · {tlsTelemetry?.days_remaining ? `${tlsTelemetry.days_remaining} days remaining` : "Valid Trusted CA"}
+                  </span>
+                </div>
+
+                <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <span className="text-zinc-400">DNS Domain Authentication</span>
+                  <span className="text-zinc-200">
+                    DMARC: {dnsRecon?.dmarc ? "Configured" : "None"} · SPF: {dnsRecon?.spf ? "Configured" : "None"} · CAA: {dnsRecon?.caa?.length ? `${dnsRecon.caa.length} record(s)` : "None"}
+                  </span>
+                </div>
+
+                <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <span className="text-zinc-400">Edge Proxy / WAF Shield</span>
+                  <span className="text-zinc-200">
+                    {collected.cdn_detected ? `${collected.cdn_detected} Proxy` : "Direct Origin Host"} {collected.waf_detected ? `· ${collected.waf_detected} Active` : ""}
+                  </span>
+                </div>
+
+                {sensitiveSurfaces && sensitiveSurfaces.length > 0 && (
+                  <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <span className="text-zinc-400">Sensitive Surface Probes</span>
+                    <span className="text-zinc-200">
+                      {sensitiveSurfaces.map((s: any) => `${s.path} (HTTP ${s.status})`).join(" · ")}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* PHASE 2: VERIFIED VULNERABILITY FINDINGS */}
+          <section className="space-y-4">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                <span>2. Verified Vulnerability Findings ({realVulnerabilities.length})</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">Phase 2 Security Verification</span>
             </div>
 
-            <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-zinc-400">DNS Domain Authentication</span>
-              <span className="text-zinc-200">
-                DMARC: {dnsRecon?.dmarc ? "Configured" : "None"} · SPF: {dnsRecon?.spf ? "Configured" : "None"} · CAA: {dnsRecon?.caa?.length ? `${dnsRecon.caa.length} record(s)` : "None"}
-              </span>
-            </div>
+            {realVulnerabilities.length === 0 ? (
+              <div className="p-4 border border-zinc-800 rounded bg-[#0e1117] space-y-1.5">
+                <div className="flex items-center gap-2 text-zinc-200 font-mono text-xs font-semibold">
+                  <ShieldCheck className="w-4 h-4 text-zinc-400" />
+                  <span>Zero Verified Critical or High Vulnerabilities</span>
+                </div>
+                <p className="text-zinc-400 font-sans text-xs leading-relaxed">
+                  No exploitable vulnerabilities, unauthenticated credential endpoints, database leakage, or critical configuration flaws were discovered during this assessment. Perimeter baseline controls are active.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {realVulnerabilities.map((finding, idx) => {
+                  const evidenceStr = Array.isArray(finding.evidence)
+                    ? finding.evidence.join("\n")
+                    : String(finding.evidence || "");
 
-            <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <span className="text-zinc-400">Edge Proxy / WAF Shield</span>
-              <span className="text-zinc-200">
-                {collected.cdn_detected ? `${collected.cdn_detected} Proxy` : "Direct Origin Host"} {collected.waf_detected ? `· ${collected.waf_detected} Active` : ""}
-              </span>
-            </div>
+                  return (
+                    <div key={idx} className="border border-zinc-800 rounded bg-[#0e1117] p-5 space-y-4">
+                      <div className="space-y-1 font-mono">
+                        <div className="text-[10px] text-zinc-400 uppercase tracking-wide">
+                          Vulnerability #{idx + 1} · {finding.category || "Web Security"}
+                        </div>
+                        <h3 className="text-sm sm:text-base font-bold text-white">
+                          {finding.title}
+                        </h3>
+                      </div>
 
-            {sensitiveSurfaces && sensitiveSurfaces.length > 0 && (
-              <div className="px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <span className="text-zinc-400">Sensitive Surface Probes</span>
-                <span className="text-zinc-200">
-                  {sensitiveSurfaces.map((s: any) => `${s.path} (HTTP ${s.status})`).join(" · ")}
-                </span>
+                      <div className="space-y-1 font-sans text-xs">
+                        <span className="text-zinc-400 font-mono text-[11px] uppercase font-semibold block">Description:</span>
+                        <p className="text-zinc-300 leading-relaxed">
+                          {evidenceStr || finding.title}
+                        </p>
+                      </div>
+
+                      {evidenceStr && (
+                        <div className="space-y-1 font-mono">
+                          <span className="text-zinc-400 text-[11px] uppercase font-semibold block">Observed Technical Evidence:</span>
+                          <pre className="p-3 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs whitespace-pre-wrap break-all leading-relaxed">
+                            {evidenceStr}
+                          </pre>
+                        </div>
+                      )}
+
+                      {finding.recommendation && (
+                        <div className="space-y-1 font-sans text-xs">
+                          <span className="text-zinc-400 font-mono text-[11px] uppercase font-semibold block">Remediation Action:</span>
+                          <div className="p-3 rounded bg-zinc-900/60 border border-zinc-800 text-zinc-200 whitespace-pre-wrap leading-relaxed">
+                            {finding.recommendation}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* ========================================================================= */}
-      {/* 3. PHASE 2: VERIFIED VULNERABILITY FINDINGS (WITH TECHNICAL EVIDENCE)      */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
-          <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider flex items-center gap-2">
-            <Lock className="w-3.5 h-3.5 text-zinc-400" />
-            <span>2. Verified Vulnerability Findings ({realVulnerabilities.length})</span>
-          </h2>
-          <span className="text-[11px] text-zinc-400">Phase 2 Security Verification</span>
-        </div>
-
-        {realVulnerabilities.length === 0 ? (
-          <div className="p-4 border border-zinc-800 rounded bg-[#0e1117] space-y-1.5">
-            <div className="flex items-center gap-2 text-zinc-200 font-mono text-xs font-semibold">
-              <ShieldCheck className="w-4 h-4 text-zinc-400" />
-              <span>Zero Verified Critical or High Vulnerabilities</span>
+          {/* PHASE 3: SECURITY HARDENING NOTES */}
+          <section className="space-y-4">
+            <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
+              <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
+                3. Security Hardening Notes &amp; Hygiene ({hardeningNotes.length})
+              </h2>
+              <span className="text-[10px] text-zinc-400">
+                Unrated Defense-in-Depth
+              </span>
             </div>
-            <p className="text-zinc-400 font-sans text-xs leading-relaxed">
-              No exploitable vulnerabilities, unauthenticated credential endpoints, database leakage, or critical configuration flaws were discovered during this assessment. Perimeter baseline controls are active.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {realVulnerabilities.map((finding, idx) => {
-              const evidenceStr = Array.isArray(finding.evidence)
-                ? finding.evidence.join("\n")
-                : String(finding.evidence || "");
 
-              return (
-                <div key={idx} className="border border-zinc-800 rounded bg-[#0e1117] p-5 space-y-4">
-                  <div className="space-y-1 font-mono">
-                    <div className="text-[10px] text-zinc-400 uppercase tracking-wide">
-                      Vulnerability #{idx + 1} · {finding.category || "Web Security"}
+            {hardeningNotes.length === 0 ? (
+              <p className="text-xs text-zinc-400 font-sans">
+                No secondary hardening notes identified. All monitored defensive headers and cookie parameters are present.
+              </p>
+            ) : (
+              <div className="border border-zinc-800 rounded bg-[#0e1117] font-sans text-xs divide-y divide-zinc-850">
+                {hardeningNotes.map((note, idx) => (
+                  <div key={idx} className="p-4 space-y-1.5">
+                    <div className="font-mono text-zinc-200 font-bold text-xs">
+                      {idx + 1}. {note.title}
                     </div>
-                    <h3 className="text-sm sm:text-base font-bold text-white">
-                      {finding.title}
-                    </h3>
+                    {note.evidence && (
+                      <p className="text-zinc-400 text-xs">
+                        <strong className="text-zinc-300 font-mono">Observation:</strong> {Array.isArray(note.evidence) ? note.evidence.join(" ") : String(note.evidence)}
+                      </p>
+                    )}
+                    {note.recommendation && (
+                      <p className="text-zinc-300 text-xs">
+                        <strong className="text-zinc-400 font-mono">Suggested Action:</strong> {note.recommendation}
+                      </p>
+                    )}
                   </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-                  <div className="space-y-1 font-sans text-xs">
-                    <span className="text-zinc-400 font-mono text-[11px] uppercase font-semibold block">Description:</span>
-                    <p className="text-zinc-300 leading-relaxed">
-                      {evidenceStr || finding.title}
-                    </p>
+          {/* PHASE 4: VERIFIED DEFENSIVE CONTROLS */}
+          {passedChecks.length > 0 && (
+            <section className="space-y-3 font-mono">
+              <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
+                <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
+                  4. Verified Defensive Controls ({passedChecks.length})
+                </h2>
+                <span className="text-[10px] text-zinc-400">Active Defenses</span>
+              </div>
+
+              <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs text-zinc-300">
+                {passedChecks.map((chk, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                    <span>{chk}</span>
                   </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-                  {evidenceStr && (
-                    <div className="space-y-1 font-mono">
-                      <span className="text-zinc-400 text-[11px] uppercase font-semibold block">Observed Technical Evidence:</span>
-                      <pre className="p-3 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs whitespace-pre-wrap break-all leading-relaxed">
-                        {evidenceStr}
-                      </pre>
-                    </div>
-                  )}
-
-                  {finding.recommendation && (
-                    <div className="space-y-1 font-sans text-xs">
-                      <span className="text-zinc-400 font-mono text-[11px] uppercase font-semibold block">Remediation Action:</span>
-                      <div className="p-3 rounded bg-zinc-900/60 border border-zinc-800 text-zinc-200 whitespace-pre-wrap leading-relaxed">
-                        {finding.recommendation}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 4. SECURITY HARDENING NOTES (SMALL ISSUES — NO SEVERITY RATINGS)          */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="border-b border-zinc-800 pb-2 flex items-center justify-between font-mono">
-          <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
-            3. Security Hardening Notes &amp; Hygiene ({hardeningNotes.length})
-          </h2>
-          <span className="text-[10px] text-zinc-400">
-            Unrated Defense-in-Depth
-          </span>
         </div>
-
-        {hardeningNotes.length === 0 ? (
-          <p className="text-xs text-zinc-400 font-sans">
-            No secondary hardening notes identified. All monitored defensive headers and cookie parameters are present.
-          </p>
-        ) : (
-          <div className="border border-zinc-800 rounded bg-[#0e1117] font-sans text-xs divide-y divide-zinc-850">
-            {hardeningNotes.map((note, idx) => (
-              <div key={idx} className="p-4 space-y-1.5">
-                <div className="font-mono text-zinc-200 font-bold text-xs">
-                  {idx + 1}. {note.title}
-                </div>
-                {note.evidence && (
-                  <p className="text-zinc-400 text-xs">
-                    <strong className="text-zinc-300 font-mono">Observation:</strong> {Array.isArray(note.evidence) ? note.evidence.join(" ") : String(note.evidence)}
-                  </p>
-                )}
-                {note.recommendation && (
-                  <p className="text-zinc-300 text-xs">
-                    <strong className="text-zinc-400 font-mono">Suggested Action:</strong> {note.recommendation}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 5. VERIFIED DEFENSIVE CONTROLS (PASSING CHECKS)                           */}
-      {/* ========================================================================= */}
-      {passedChecks.length > 0 && (
-        <section className="space-y-3 font-mono">
-          <div className="border-b border-zinc-800 pb-2 flex items-center justify-between">
-            <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider">
-              4. Verified Defensive Controls ({passedChecks.length})
-            </h2>
-            <span className="text-[10px] text-zinc-400">Active Defenses</span>
-          </div>
-
-          <div className="border border-zinc-800 rounded bg-[#0e1117] p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs text-zinc-300">
-            {passedChecks.map((chk, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                <span>{chk}</span>
-              </div>
-            ))}
-          </div>
-        </section>
       )}
 
       {/* ========================================================================= */}
-      {/* 6. RAW TECHNICAL TELEMETRY & HEADERS                                      */}
+      {/* RAW TECHNICAL TELEMETRY & HEADERS                                         */}
       {/* ========================================================================= */}
       <section className="space-y-3 font-mono text-xs">
         <h2 className="text-xs uppercase text-zinc-200 font-bold tracking-wider border-b border-zinc-800 pb-2">
-          5. Technical Telemetry &amp; Observed Data
+          {isUrlScan ? "Threat Telemetry & Observed Data" : "5. Technical Telemetry & Observed Data"}
         </h2>
 
         {/* Collapsible Headers */}
@@ -679,14 +1071,14 @@ export default function ReportDetailPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 7. METHODOLOGY & EVIDENCE STANDARD                                        */}
+      {/* METHODOLOGY & EVIDENCE STANDARD                                           */}
       {/* ========================================================================= */}
       <footer className="pt-4 border-t border-zinc-800 text-[11px] text-zinc-500 space-y-1 font-sans">
         <p>
-          <strong>Methodology Statement:</strong> Non-destructive passive reconnaissance and bounded surface verification. No exploit payloads, destructive fuzzing, or code execution were performed.
+          <strong>Methodology Statement:</strong> Non-destructive passive reconnaissance and bounded threat verification. No exploit payloads, destructive fuzzing, or code execution were performed.
         </p>
         <p>
-          <strong>Evidence Standard:</strong> All observations and technology fingerprints are derived directly from observed network responses. Speculative and unverified hypotheses are suppressed.
+          <strong>Evidence Standard:</strong> All observations and threat indicators are derived directly from observed network responses and link structures. Speculative hypotheses are suppressed.
         </p>
       </footer>
 

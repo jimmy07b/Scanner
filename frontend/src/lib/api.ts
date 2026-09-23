@@ -46,7 +46,8 @@ export interface ScanResult {
   id: string;
   scan_id?: string;
   target?: string;
-  scan_type: "url_check" | "website" | "file" | "url";
+  scan_type: "url_check" | "website" | "file" | "url" | string;
+  report_type?: string;
   target_name: string;
   status: "queued" | "running" | "completed" | "failed" | "clean" | "low" | "medium" | "high" | "critical";
   stage?: string;

@@ -31,6 +31,20 @@ async def test_url_checker_clean_site():
     assert collected["has_punycode"] is False
     assert len(passed_checks) > 0
     assert verdict in ["safe", "suspicious"]
+    assert "threat_analysis" in collected
+    assert collected["threat_analysis"]["is_phishing"] is False
+    assert collected["threat_analysis"]["is_malware"] is False
+
+@pytest.mark.asyncio
+async def test_url_checker_malware_executable_link():
+    score, status, verdict, summary, findings, passed_checks, collected = await url_checker.check_url(
+        "http://suspicious-share.test/downloads/invoice_update.exe"
+    )
+    assert collected["has_malware_extension"] is True
+    assert any("executable_file_link" in f["finding_key"] for f in findings)
+    assert "threat_analysis" in collected
+    assert collected["threat_analysis"]["is_malware"] is True
+    assert collected["threat_analysis"]["malware_verdict"] == "MALWARE / VIRUS RISK"
 
 @pytest.mark.asyncio
 async def test_website_auditor_clean():
